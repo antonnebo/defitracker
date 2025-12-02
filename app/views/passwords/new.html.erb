@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Восстановление пароля - DeFi Tracker</title>
+  <%= stylesheet_link_tag "authentication", "data-turbo-track": "reload" %>
+
+  <!-- Distinctive Cyrillic-optimized fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Onest:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1 class="auth-logo">
+          <a href="<%= root_path %>">DeFi Tracker</a>
+        </h1>
+        <h2 class="auth-title">Восстановление пароля</h2>
+        <p class="auth-subtitle">Введите ваш email для получения ссылки сброса</p>
+      </div>
+
+      <% if flash[:alert] %>
+        <div class="flash-alert"><%= flash[:alert] %></div>
+      <% end %>
+
+      <% if flash[:notice] %>
+        <div class="flash-notice"><%= flash[:notice] %></div>
+      <% end %>
+
+      <%= form_with url: passwords_path, class: "auth-form" do |form| %>
+        <div class="form-group">
+          <%= form.label :email_address, "Email", class: "form-label" %>
+          <%= form.email_field :email_address,
+                               required: true,
+                               autofocus: true,
+                               autocomplete: "email",
+                               placeholder: "ваш@email.com",
+                               class: "form-input" %>
+          <p class="form-hint">Мы отправим вам ссылку для сброса пароля</p>
+        </div>
+
+        <%= form.submit "Отправить ссылку", class: "auth-submit" %>
+      <% end %>
+
+      <div class="auth-footer">
+        <p>
+          Вспомнили пароль?
+          <%= link_to "Войти", new_session_path, class: "auth-link" %>
+        </p>
+      </div>
+    </div>
+
+    <div class="auth-background"></div>
+  </div>
+</body>
+</html>
