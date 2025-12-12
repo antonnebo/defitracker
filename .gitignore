@@ -34,3 +34,6 @@
 /config/*.key
 
 .kamal/secrets
+
+/app/assets/builds/*
+!/app/assets/builds/.keep

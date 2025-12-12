@@ -1,0 +1,182 @@
+<div class="page-container">
+  <!-- Header -->
+  <header class="page-header">
+    <%= link_to "DeFi Tracker", dashboard_path, class: "page-logo" %>
+    <nav class="page-nav">
+      <%= link_to "Dashboard", dashboard_path, class: "nav-link" %>
+      <%= link_to "Accounts", accounts_path, class: "nav-link active" %>
+      <% if Current.session %>
+        <%= button_to "Выйти", session_path, method: :delete, class: "btn btn-outline" %>
+      <% end %>
+    </nav>
+  </header>
+
+  <% if flash[:notice] %>
+    <div class="flash flash-notice">
+      <%= flash[:notice] %>
+    </div>
+  <% end %>
+
+  <!-- Page Title & Actions -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <h1>Accounts</h1>
+      <p style="color: var(--color-text-secondary); margin-top: 8px;">Manage your wallet addresses and exchange connections</p>
+    </div>
+    <div style="display: flex; gap: 12px;">
+      <%= link_to "#", class: "btn btn-secondary" do %>
+        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+        </svg>
+        <span>Bulk import</span>
+      <% end %>
+      <%= link_to new_account_path, class: "btn btn-primary" do %>
+        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        <span>Add account</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Search and Filters -->
+  <div style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 300px; position: relative;">
+      <input
+        type="text"
+        placeholder="Search for account name or address"
+        style="width: 100%; background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 12px 16px 12px 44px; color: var(--color-text-primary); font-family: var(--font-body);"
+      />
+      <svg style="width: 20px; height: 20px; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--color-text-tertiary);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+      </svg>
+    </div>
+
+    <select style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 12px 16px; color: var(--color-text-primary); font-family: var(--font-body); cursor: pointer;">
+      <option>All Groups</option>
+    </select>
+
+    <select style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 12px 16px; color: var(--color-text-primary); font-family: var(--font-body); cursor: pointer;">
+      <option>All Status</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+    </select>
+
+    <select style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 12px 16px; color: var(--color-text-primary); font-family: var(--font-body); cursor: pointer;">
+      <option>All Types</option>
+      <option value="ethereum">Ethereum & EVM</option>
+      <option value="solana">Solana & SVM</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="card" style="padding: 0; overflow: hidden;">
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 1px solid var(--color-border);">
+          <th style="text-align: left; padding: 16px 20px; font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary);">Name</th>
+          <th style="text-align: left; padding: 16px 20px; font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary);">Group</th>
+          <th style="text-align: left; padding: 16px 20px; font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary);">Address</th>
+          <th style="text-align: left; padding: 16px 20px; font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary);">Type</th>
+          <th style="text-align: left; padding: 16px 20px; font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary);">Extensions</th>
+          <th style="text-align: left; padding: 16px 20px; font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary);">Description</th>
+          <th style="text-align: right; padding: 16px 20px; font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary);">USD Balance</th>
+          <th style="width: 48px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @accounts.empty? %>
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 80px 20px;">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+                <svg style="width: 64px; height: 64px; color: var(--color-text-tertiary); opacity: 0.3;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                </svg>
+                <div>
+                  <p style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;">No accounts yet</p>
+                  <p style="color: var(--color-text-secondary);">Add your first wallet or exchange account to get started</p>
+                </div>
+                <%= link_to new_account_path, class: "btn btn-primary", style: "margin-top: 16px;" do %>
+                  <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                  <span>Add your first account</span>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% else %>
+          <% @accounts.each do |account| %>
+            <tr style="border-bottom: 1px solid var(--color-border); transition: background 0.2s ease;">
+              <td style="padding: 16px 20px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-accent-primary); flex-shrink: 0;"></span>
+                  <span style="font-weight: 600; color: var(--color-text-primary);"><%= account.display_name %></span>
+                </div>
+              </td>
+              <td style="padding: 16px 20px; color: var(--color-text-secondary);">
+                <%= account.group || "-" %>
+              </td>
+              <td style="padding: 16px 20px; font-family: 'Monaco', 'Courier New', monospace; font-size: 0.875rem; color: var(--color-text-secondary);">
+                <%= account.shortened_address %>
+              </td>
+              <td style="padding: 16px 20px; font-size: 0.875rem; color: var(--color-text-secondary);">
+                <%= account.account_type || "Detecting..." %>
+              </td>
+              <td style="padding: 16px 20px;">
+                <% if account.extensions.present? && account.extensions.any? %>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <% account.extensions.each do |ext| %>
+                      <span style="display: inline-flex; align-items: center; padding: 4px 10px; background: var(--color-bg-elevated); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.75rem; color: var(--color-text-secondary);">
+                        <%= ext %>
+                      </span>
+                    <% end %>
+                  </div>
+                <% end %>
+              </td>
+              <td style="padding: 16px 20px; font-size: 0.875rem; color: var(--color-text-secondary);">
+                <%= account.description %>
+              </td>
+              <td style="padding: 16px 20px; text-align: right; font-weight: 600; font-family: var(--font-display); font-size: 1rem;">
+                <% if account.sync_status == "synced" %>
+                  <span style="color: var(--color-text-primary);">$<%= number_with_delimiter(account.balance_usd.round(2), delimiter: ",") %></span>
+                <% elsif account.sync_status == "syncing" %>
+                  <span style="color: var(--color-text-tertiary);">Syncing...</span>
+                <% elsif account.sync_status == "error" %>
+                  <span style="color: #EF4444;">Error</span>
+                <% else %>
+                  <span style="color: var(--color-text-tertiary);">Pending...</span>
+                <% end %>
+              </td>
+              <td style="padding: 16px 20px;">
+                <button style="color: var(--color-text-secondary); background: none; border: none; cursor: pointer; padding: 4px; transition: color 0.2s ease;">
+                  <svg style="width: 20px; height: 20px;" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          <% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+  /* Hover effects for table rows */
+  tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02) !important;
+  }
+
+  /* Hover effect for action button */
+  tbody button:hover {
+    color: var(--color-accent-primary) !important;
+  }
+
+  /* Input focus styles */
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--color-accent-primary) !important;
+  }
+</style>

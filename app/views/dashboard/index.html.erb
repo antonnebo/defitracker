@@ -250,6 +250,7 @@
       <%= link_to "DeFi Tracker", dashboard_path, class: "dashboard-logo" %>
       <nav class="dashboard-nav">
         <% if Current.session %>
+          <%= link_to "Accounts", accounts_path, class: "nav-link" %>
           <%= button_to "Выйти", session_path, method: :delete, class: "logout-btn" %>
         <% end %>
       </nav>

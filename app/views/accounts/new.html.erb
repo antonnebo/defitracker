@@ -1,0 +1,125 @@
+<div class="page-container">
+  <!-- Header -->
+  <header class="page-header">
+    <%= link_to "DeFi Tracker", dashboard_path, class: "page-logo" %>
+    <nav class="page-nav">
+      <%= link_to "Dashboard", dashboard_path, class: "nav-link" %>
+      <%= link_to "Accounts", accounts_path, class: "nav-link active" %>
+      <% if Current.session %>
+        <%= button_to "Выйти", session_path, method: :delete, class: "btn btn-outline" %>
+      <% end %>
+    </nav>
+  </header>
+
+  <div style="max-width: 720px; margin: 0 auto;">
+    <!-- Back Button -->
+    <div style="margin-bottom: 32px;">
+      <%= link_to accounts_path, style: "display: inline-flex; align-items: center; gap: 8px; color: var(--color-text-secondary); text-decoration: none; font-weight: 500; transition: color 0.3s ease;" do %>
+        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        <span>Back to Accounts</span>
+      <% end %>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card" style="padding: 48px;">
+      <h1 style="margin-bottom: 8px;">Add Account</h1>
+      <p style="color: var(--color-text-secondary); margin-bottom: 32px;">Enter a wallet address to add it to your portfolio. We'll automatically detect the blockchain and fetch your balance.</p>
+
+      <%= form_with model: @account, style: "display: flex; flex-direction: column; gap: 28px;" do |f| %>
+        <% if @account.errors.any? %>
+          <div class="flash flash-alert">
+            <h3 style="font-weight: 600; margin-bottom: 12px;">Please fix the following errors:</h3>
+            <ul style="list-style: disc; list-style-position: inside; text-align: left;">
+              <% @account.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <!-- Wallet Address Field -->
+        <div>
+          <%= f.label :address, "Wallet Address", style: "display: block; font-weight: 600; margin-bottom: 10px; color: var(--color-text-primary);" %>
+          <%= f.text_field :address,
+            placeholder: "0x1234... or BKUqff...",
+            style: "width: 100%; background: var(--color-bg-primary); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 14px 16px; color: var(--color-text-primary); font-family: 'Monaco', 'Courier New', monospace; font-size: 0.95rem; transition: border-color 0.3s ease;",
+            required: true
+          %>
+          <p style="margin-top: 8px; font-size: 0.875rem; color: var(--color-text-secondary);">
+            Supports Ethereum, Solana, and other major blockchains
+          </p>
+        </div>
+
+        <!-- Name Field -->
+        <div>
+          <%= f.label :name, "Name (Optional)", style: "display: block; font-weight: 600; margin-bottom: 10px; color: var(--color-text-primary);" %>
+          <%= f.text_field :name,
+            placeholder: "My Main Wallet",
+            style: "width: 100%; background: var(--color-bg-primary); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 14px 16px; color: var(--color-text-primary); font-family: var(--font-body); transition: border-color 0.3s ease;"
+          %>
+          <p style="margin-top: 8px; font-size: 0.875rem; color: var(--color-text-secondary);">
+            A friendly name to help you identify this account
+          </p>
+        </div>
+
+        <!-- Info Box -->
+        <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-md); padding: 24px;">
+          <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; color: var(--color-accent-primary);">
+            <svg style="width: 22px; height: 22px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>What happens next?</span>
+          </h3>
+          <ul style="display: flex; flex-direction: column; gap: 8px; font-size: 0.925rem; color: var(--color-text-secondary);">
+            <li style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: var(--color-accent-primary);">✓</span>
+              <span>We'll automatically detect the blockchain type</span>
+            </li>
+            <li style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: var(--color-accent-primary);">✓</span>
+              <span>Fetch all token balances and calculate USD value</span>
+            </li>
+            <li style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: var(--color-accent-primary);">✓</span>
+              <span>Check for DeFi positions and protocols</span>
+            </li>
+            <li style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: var(--color-accent-primary);">✓</span>
+              <span>Resolve ENS name if available</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 12px; margin-top: 8px;">
+          <%= link_to "Cancel", accounts_path, class: "btn btn-secondary", style: "flex: 1; justify-content: center;" %>
+          <%= f.submit "Add Account", class: "btn btn-primary", style: "flex: 1; justify-content: center; cursor: pointer;" %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Privacy Notice -->
+    <div style="margin-top: 24px; padding: 20px; background: rgba(16, 185, 129, 0.03); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+      <p style="font-size: 0.9rem; color: var(--color-text-secondary); line-height: 1.6;">
+        <strong style="color: var(--color-accent-primary);">Privacy & Security:</strong>
+        We only need your wallet address (public). We never request private keys or seed phrases.
+      </p>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Focus styles for inputs */
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--color-accent-primary) !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+
+  /* Hover effect for back link */
+  a:has(svg):hover {
+    color: var(--color-accent-primary) !important;
+  }
+</style>
