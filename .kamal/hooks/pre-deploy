@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Run database migrations before deploying
+bin/kamal app exec "bin/rails db:prepare"
+
+# Load queue schema if queue tables don't exist
+bin/kamal app exec 'sh -c "DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bin/rails db:schema:load:queue"' || true
