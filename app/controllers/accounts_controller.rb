@@ -3,9 +3,17 @@ class AccountsController < ApplicationController
 
   def index
     @accounts = Current.user.accounts.order(created_at: :desc)
+
+    # Auto-refresh stale accounts
+    @accounts.each do |account|
+      account.sync_if_needed
+    end
   end
 
   def show
+    # Auto-refresh if stale
+    @account.sync_if_needed
+
     # Parse defi_positions JSON for view
     @defi_positions = parse_defi_positions(@account.defi_positions)
 
@@ -47,6 +55,16 @@ class AccountsController < ApplicationController
   def destroy
     @account.destroy
     redirect_to accounts_path, notice: "Account removed successfully."
+  end
+
+  def sync
+    @account = Current.user.accounts.find(params[:id])
+
+    if @account.enqueue_enrichment
+      redirect_to account_path(@account), notice: "Account sync started. Data will update shortly."
+    else
+      redirect_to account_path(@account), alert: "Account is already syncing."
+    end
   end
 
   private

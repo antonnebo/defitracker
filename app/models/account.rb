@@ -28,10 +28,22 @@ class Account < ApplicationRecord
     sync_status.in?(["pending", "error"]) || last_synced_at.nil? || last_synced_at < 5.minutes.ago
   end
 
-  private
-
+  # Enqueue enrichment job
+  # Returns true if job was enqueued, false if already syncing
   def enqueue_enrichment
+    return false if sync_status == "syncing" # Idempotency guard
+
     AccountEnrichmentJob.perform_later(id)
     update(sync_status: "pending")
+    true
   end
+
+  # Enqueue sync job only if account needs syncing
+  # Returns true if job was enqueued, false otherwise
+  def sync_if_needed
+    return false unless needs_sync?
+    enqueue_enrichment
+  end
+
+  private
 end

@@ -60,7 +60,10 @@
           </svg>
           <span>Edit</span>
         <% end %>
-        <%= button_to "#", method: :post, class: "btn btn-primary" do %>
+        <%= button_to sync_account_path(@account), method: :post,
+            class: "btn btn-primary",
+            disabled: @account.sync_status == "syncing",
+            data: { turbo: false } do %>
           <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
           </svg>
@@ -179,83 +182,14 @@
         <p style="color: var(--color-text-secondary);">This wallet has no active positions in DeFi protocols</p>
       </div>
     <% else %>
-      <!-- Positions Table -->
-      <div class="card" style="padding: 0; overflow: hidden;">
-        <table style="width: 100%; border-collapse: collapse;">
-          <thead>
-            <tr style="border-bottom: 1px solid var(--color-border);">
-              <th style="text-align: left; padding: 16px 20px; font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary);">Protocol</th>
-              <th style="text-align: left; padding: 16px 20px; font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary);">Type</th>
-              <th style="text-align: left; padding: 16px 20px; font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary);">Positions</th>
-              <th style="text-align: right; padding: 16px 20px; font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary);">Total Value</th>
-              <th style="width: 48px;"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @defi_positions.sort_by { |protocol| -protocol["positions"].sum { |p| p["usd_value"].to_f } }.each_with_index do |protocol, index| %>
-              <% protocol_value = protocol["positions"].sum { |p| p["usd_value"].to_f } %>
-              <tr style="border-bottom: 1px solid var(--color-border); transition: background 0.2s ease;" data-protocol-row="<%= index %>">
-                <td style="padding: 16px 20px;">
-                  <span style="font-weight: 600; color: var(--color-text-primary);"><%= protocol["name"] %></span>
-                </td>
-                <td style="padding: 16px 20px;">
-                  <span style="display: inline-flex; align-items: center; padding: 4px 10px; background: var(--color-bg-elevated); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.75rem; color: var(--color-text-secondary); text-transform: capitalize;">
-                    <%= protocol["type"] %>
-                  </span>
-                </td>
-                <td style="padding: 16px 20px; color: var(--color-text-secondary);">
-                  <%= protocol["positions"].length %> <%= protocol["positions"].length == 1 ? "position" : "positions" %>
-                </td>
-                <td style="padding: 16px 20px; text-align: right; font-weight: 600; font-family: var(--font-display);">
-                  <span style="color: <%= protocol_value >= 0 ? 'var(--color-text-primary)' : '#EF4444' %>;">
-                    <%= protocol_value >= 0 ? '' : '-' %>$<%= number_with_delimiter(protocol_value.abs.round(2), delimiter: ",") %>
-                  </span>
-                </td>
-                <td style="padding: 16px 20px;">
-                  <button onclick="toggleProtocol(<%= index %>)" style="color: var(--color-text-secondary); background: none; border: none; cursor: pointer; padding: 4px; transition: transform 0.2s ease;" data-toggle-btn="<%= index %>">
-                    <svg style="width: 20px; height: 20px; transform: rotate(0deg); transition: transform 0.2s ease;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                  </button>
-                </td>
-              </tr>
-              <!-- Expandable Positions Detail -->
-              <tr style="display: none; border-bottom: 1px solid var(--color-border);" data-protocol-detail="<%= index %>">
-                <td colspan="5" style="padding: 0; background: var(--color-bg-secondary);">
-                  <div style="padding: 20px;">
-                    <div style="display: grid; gap: 12px;">
-                      <% protocol["positions"].each do |position| %>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--color-bg-primary); border: 1px solid var(--color-border); border-radius: var(--radius-sm);">
-                          <div style="flex: 1;">
-                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                              <span style="font-weight: 600; color: var(--color-text-primary);"><%= position["token_symbol"] %></span>
-                              <% if position["chain"] %>
-                                <span style="font-size: 0.75rem; color: var(--color-text-tertiary); text-transform: uppercase;"><%= position["chain"] %></span>
-                              <% end %>
-                              <% if position["is_debt"] %>
-                                <span style="display: inline-flex; align-items: center; padding: 2px 6px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); font-size: 0.75rem; color: #EF4444;">
-                                  DEBT
-                                </span>
-                              <% end %>
-                            </div>
-                            <p style="font-size: 0.875rem; color: var(--color-text-secondary);"><%= position["token_name"] %></p>
-                          </div>
-                          <div style="text-align: right;">
-                            <p style="font-weight: 600; color: var(--color-text-primary); margin-bottom: 4px;"><%= number_with_delimiter(position["balance"].to_f.round(6), delimiter: ",") %></p>
-                            <p style="font-size: 0.875rem; font-weight: 600; font-family: var(--font-display); color: <%= position["usd_value"].to_f >= 0 ? 'var(--color-text-secondary)' : '#EF4444' %>;">
-                              <%= position["usd_value"].to_f >= 0 ? '' : '-' %>$<%= number_with_delimiter(position["usd_value"].to_f.abs.round(2), delimiter: ",") %>
-                            </p>
-                          </div>
-                        </div>
-                      <% end %>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
+      <!-- Protocol Cards -->
+      <% sorted_protocols = @defi_positions.sort_by { |protocol|
+           -protocol["positions"].sum { |p| p["usd_value"].to_f }
+         }
+      %>
+      <% sorted_protocols.each_with_index do |protocol, index| %>
+        <%= render "accounts/defi_protocol_card", protocol: protocol, index: index %>
+      <% end %>
     <% end %>
   </div>
 </div>
@@ -264,17 +198,6 @@
   @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
-  }
-
-  /* Hover effects for table rows */
-  tbody tr[data-protocol-row]:hover {
-    background: rgba(255, 255, 255, 0.02) !important;
-    cursor: pointer;
-  }
-
-  /* Hover effect for toggle button */
-  tbody button:hover {
-    color: var(--color-accent-primary) !important;
   }
 
   /* Back link hover */
@@ -287,28 +210,3 @@
     color: var(--color-accent-primary) !important;
   }
 </style>
-
-<script>
-  function toggleProtocol(index) {
-    const detailRow = document.querySelector(`tr[data-protocol-detail="${index}"]`);
-    const toggleBtn = document.querySelector(`button[data-toggle-btn="${index}"] svg`);
-
-    if (detailRow.style.display === 'none' || detailRow.style.display === '') {
-      detailRow.style.display = 'table-row';
-      toggleBtn.style.transform = 'rotate(180deg)';
-    } else {
-      detailRow.style.display = 'none';
-      toggleBtn.style.transform = 'rotate(0deg)';
-    }
-  }
-
-  // Make protocol rows clickable
-  document.querySelectorAll('tr[data-protocol-row]').forEach(row => {
-    row.addEventListener('click', (e) => {
-      // Don't toggle if clicking the button directly
-      if (e.target.closest('button')) return;
-      const index = row.getAttribute('data-protocol-row');
-      toggleProtocol(index);
-    });
-  });
-</script>

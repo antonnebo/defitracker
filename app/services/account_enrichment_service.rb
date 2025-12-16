@@ -78,8 +78,11 @@ class AccountEnrichmentService
 
   def fetch_debank_portfolio
     Rails.logger.info("\n" + "="*70)
-    Rails.logger.info("🔍 Fetching Portfolio from DeBank Cloud API for #{@account.address}")
+    Rails.logger.info("🔍 Fetching Portfolio from DeBank Cloud API")
     Rails.logger.info("="*70)
+    Rails.logger.info("📍 Address (stored): #{@account.address}")
+    Rails.logger.info("📍 Address (querying): #{@account.address.downcase}")
+    Rails.logger.info("🔗 Blockchain: #{@account.blockchain}")
 
     begin
       # Use get_portfolio_breakdown which combines total_balance + protocol_positions + token_balances
@@ -90,6 +93,14 @@ class AccountEnrichmentService
         return fallback_to_alchemy
       end
 
+      # 🔍 LOG RAW DEBANK RESPONSE STRUCTURE
+      Rails.logger.info("\n📊 DeBank API Response:")
+      Rails.logger.info("  total_usd: $#{portfolio[:total_usd]}")
+      Rails.logger.info("  wallet_balance: $#{portfolio[:wallet_balance]}")
+      Rails.logger.info("  protocol_balance: $#{portfolio[:protocol_balance]}")
+      Rails.logger.info("  protocols count: #{(portfolio[:protocols] || []).length}")
+      Rails.logger.info("  tokens count: #{(portfolio[:tokens] || []).length}")
+
       # Parse DeBank portfolio_breakdown response (returns hash with symbols)
       total_usd = portfolio[:total_usd] || 0.0
       wallet_balance = portfolio[:wallet_balance] || 0.0
@@ -98,40 +109,154 @@ class AccountEnrichmentService
       # Extract DeFi positions from protocols array
       defi_positions = []
 
-      (portfolio[:protocols] || []).each do |protocol|
+      (portfolio[:protocols] || []).each_with_index do |protocol, idx|
         protocol_name = protocol["name"]
         protocol_type = protocol["site_url"]&.include?("aave") ? "lending" : "defi"
+
+        # 🔍 LOG PROTOCOL DETAILS
+        Rails.logger.info("\n  📦 Protocol #{idx + 1}: #{protocol_name}")
+        Rails.logger.info("     Type: #{protocol_type}")
+        Rails.logger.info("     Chain: #{protocol['chain'] || 'multi-chain'}")
+        Rails.logger.info("     Items: #{protocol['portfolio_item_list']&.length || 0}")
 
         positions = []
         protocol_value = 0.0
 
         if protocol["portfolio_item_list"]
           protocol["portfolio_item_list"].each do |item|
-            # net_usd_value can be negative (debt positions)
-            item_value = item["stats"]&.dig("net_usd_value")&.to_f || 0.0
-            protocol_value += item_value
+            item_chain = item["chain"] || "unknown"
+            detail = item["detail"] || {}
 
-            # Extract position details
-            position = {
-              token_symbol: item["name"] || "Unknown",
-              token_name: item["detail"]&.dig("supply_token_list", 0, "name") || protocol_name,
-              balance: item["stats"]&.dig("asset_usd_value")&.to_f || 0.0,
-              usd_value: item_value.round(2),
-              protocol: protocol_name,
-              chain: item["chain"] || "unknown"
-            }
-            positions << position
+            # Process SUPPLY positions from supply_token_list
+            supply_list = detail["supply_token_list"] || []
+            supply_list.each do |token|
+              token_amount = token["amount"]&.to_f || 0.0
+              token_price = token["price"]&.to_f || 0.0
+              token_usd_value = token_amount * token_price
+
+              protocol_value += token_usd_value
+
+              position = {
+                token_symbol: token["symbol"] || token["optimized_symbol"] || "Unknown",
+                token_name: token["name"] || protocol_name,
+                balance: token_amount,
+                usd_value: token_usd_value.round(2),
+                protocol: protocol_name,
+                chain: item_chain,
+                is_debt: false
+              }
+
+              positions << position
+            end
+
+            # Process BORROW positions from borrow_token_list
+            borrow_list = detail["borrow_token_list"] || []
+            borrow_list.each do |token|
+              token_amount = token["amount"]&.to_f || 0.0
+              token_price = token["price"]&.to_f || 0.0
+              token_usd_value = -(token_amount * token_price) # Negative because it's debt
+
+              protocol_value += token_usd_value
+
+              position = {
+                token_symbol: token["symbol"] || token["optimized_symbol"] || "Unknown",
+                token_name: token["name"] || "Borrowed #{token['symbol']}",
+                balance: token_amount,
+                usd_value: token_usd_value.round(2),
+                protocol: protocol_name,
+                chain: item_chain,
+                is_debt: true
+              }
+
+              Rails.logger.info("     🚨 BORROW TOKEN PARSED:")
+              Rails.logger.info("        Symbol: #{position[:token_symbol]}")
+              Rails.logger.info("        Name: #{position[:token_name]}")
+              Rails.logger.info("        Amount: #{token_amount}")
+              Rails.logger.info("        Price: $#{token_price}")
+              Rails.logger.info("        USD Value: $#{token_usd_value.round(2)}")
+              Rails.logger.info("        Chain: #{item_chain}")
+
+              positions << position
+            end
+
+            # Process DEBT positions from debt_token_list (alternative field)
+            debt_list = detail["debt_token_list"] || []
+            debt_list.each do |token|
+              token_amount = token["amount"]&.to_f || 0.0
+              token_price = token["price"]&.to_f || 0.0
+              token_usd_value = -(token_amount * token_price) # Negative because it's debt
+
+              protocol_value += token_usd_value
+
+              position = {
+                token_symbol: token["symbol"] || token["optimized_symbol"] || "Unknown",
+                token_name: token["name"] || "Debt #{token['symbol']}",
+                balance: token_amount,
+                usd_value: token_usd_value.round(2),
+                protocol: protocol_name,
+                chain: item_chain,
+                is_debt: true
+              }
+
+              Rails.logger.info("     🚨 DEBT TOKEN PARSED:")
+              Rails.logger.info("        Symbol: #{position[:token_symbol]}")
+              Rails.logger.info("        Name: #{position[:token_name]}")
+              Rails.logger.info("        Amount: #{token_amount}")
+              Rails.logger.info("        Price: $#{token_price}")
+              Rails.logger.info("        USD Value: $#{token_usd_value.round(2)}")
+              Rails.logger.info("        Chain: #{item_chain}")
+
+              positions << position
+            end
+
+            # Fallback: If no borrow/debt tokens found but debt_usd_value exists, create synthetic position
+            if borrow_list.empty? && debt_list.empty?
+              debt_usd_value = item["stats"]&.dig("debt_usd_value")&.to_f
+              if debt_usd_value && debt_usd_value > 0
+                protocol_value -= debt_usd_value
+
+                position = {
+                  token_symbol: item["name"] || "Unknown",
+                  token_name: "Borrowed (Synthetic)",
+                  balance: 0.0,
+                  usd_value: -debt_usd_value.round(2),
+                  protocol: protocol_name,
+                  chain: item_chain,
+                  is_debt: true
+                }
+
+                Rails.logger.info("     🚨 SYNTHETIC DEBT POSITION (from stats.debt_usd_value):")
+                Rails.logger.info("        USD Value: $#{-debt_usd_value.round(2)}")
+                Rails.logger.info("        Chain: #{item_chain}")
+
+                positions << position
+              end
+            end
           end
         end
 
         # Keep protocols with non-zero value OR any positions (including debt)
         if protocol_value != 0 || positions.any?
+          borrowed_count = positions.count { |p| p[:is_debt] }
+          supplied_count = positions.count { |p| !p[:is_debt] }
+
+          Rails.logger.info("     Total value: $#{protocol_value.round(2)}")
+          Rails.logger.info("     Positions: #{supplied_count} supplied, #{borrowed_count} borrowed")
+
           defi_positions << {
             name: protocol_name,
             type: protocol_type,
             positions: positions
           }
         end
+      end
+
+      # 🔍 LOG SUMMARY OF ALL DEBT POSITIONS
+      total_debt_positions = defi_positions.sum { |p| p[:positions].count { |pos| pos[:is_debt] } }
+      Rails.logger.info("\n🎯 DEBT POSITIONS SUMMARY:")
+      Rails.logger.info("  Total debt positions found: #{total_debt_positions}")
+      if total_debt_positions == 0
+        Rails.logger.warn("  ⚠️  NO DEBT POSITIONS FOUND - this may indicate a parsing issue")
       end
 
       Rails.logger.info("\n💰 DeBank Portfolio Summary:")

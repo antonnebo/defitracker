@@ -2,7 +2,11 @@ Rails.application.routes.draw do
   resource :registration, only: [ :new, :create ]
   resource :session
   resources :passwords, param: :token
-  resources :accounts
+  resources :accounts do
+    member do
+      post :sync
+    end
+  end
   get "dashboard", to: "dashboard#index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
