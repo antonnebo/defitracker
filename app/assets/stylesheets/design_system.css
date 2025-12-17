@@ -69,12 +69,16 @@ body::before {
 
 /* Header */
 .page-header {
+  margin-bottom: 48px;
+}
+
+/* Top Row: Navigation */
+.header-top-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 48px;
-  flex-wrap: wrap;
   gap: 24px;
+  padding-bottom: 16px;
 }
 
 .page-logo {
@@ -94,6 +98,42 @@ body::before {
   display: flex;
   gap: 16px;
   align-items: center;
+}
+
+/* Divider */
+.header-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 0;
+}
+
+/* Secondary Row: Status/Actions */
+.header-secondary-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 12px;
+  min-height: 40px;
+}
+
+.header-status-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.status-text {
+  font-size: 0.8125rem;
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+}
+
+.status-text.status-syncing {
+  color: var(--color-accent-primary);
+}
+
+.status-text.status-error {
+  color: #EF4444;
 }
 
 .nav-link {
@@ -160,6 +200,11 @@ body::before {
 .btn-outline:hover {
   border-color: var(--color-accent-primary);
   background: rgba(16, 185, 129, 0.1);
+}
+
+.btn-sm {
+  padding: 6px 16px;
+  font-size: 0.8125rem;
 }
 
 /* Cards */

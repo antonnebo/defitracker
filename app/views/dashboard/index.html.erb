@@ -1,55 +1,33 @@
-<div class="dashboard-container">
-  <!-- Header Section -->
-  <div class="dashboard-header">
-    <h1>Overview</h1>
-    <div class="header-actions">
-      <% if @portfolio[:last_synced] %>
-        <span class="last-updated">Updated <%= time_ago_in_words(@portfolio[:last_synced]) %> ago</span>
-      <% end %>
-      <div class="sync-status">
-        <% summary = @portfolio[:sync_status_summary] %>
-        <% if summary[:syncing] > 0 %>
-          <span class="status-syncing">⟳ Syncing <%= summary[:syncing] %></span>
-        <% end %>
-        <% if summary[:error] > 0 %>
-          <span class="status-error">⚠ <%= summary[:error] %> errors</span>
-        <% end %>
-      </div>
-      <%= button_to "Sync All", sync_all_dashboard_path, method: :post, class: "btn btn-primary" %>
-    </div>
+<!-- Empty State (if no accounts) -->
+<% if @portfolio[:total_value] == 0 && Current.user.accounts.active.none? %>
+  <div class="empty-state">
+    <h2>No accounts connected</h2>
+    <p>Add your first wallet or exchange to start tracking your portfolio.</p>
+    <%= link_to "Add Account", new_account_path, class: "btn btn-primary" %>
+  </div>
+<% else %>
+  <!-- Total Portfolio Value -->
+  <div class="portfolio-total">
+    <h2>$<%= number_with_delimiter(@portfolio[:total_value].round(0), delimiter: ",") %></h2>
   </div>
 
-  <!-- Empty State (if no accounts) -->
-  <% if @portfolio[:total_value] == 0 && Current.user.accounts.active.none? %>
-    <div class="empty-state">
-      <h2>No accounts connected</h2>
-      <p>Add your first wallet or exchange to start tracking your portfolio.</p>
-      <%= link_to "Add Account", new_account_path, class: "btn btn-primary" %>
-    </div>
-  <% else %>
-    <!-- Total Portfolio Value -->
-    <div class="portfolio-total">
-      <h2>$<%= number_with_delimiter(@portfolio[:total_value].round(0), delimiter: ",") %></h2>
+  <!-- Breakdown Cards -->
+  <div class="portfolio-breakdown">
+    <%= render "dashboard/breakdown_cards", portfolio: @portfolio %>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="dashboard-grid">
+    <!-- Left Column: Protocol Positions -->
+    <div class="protocols-section">
+      <h3>Protocols</h3>
+      <%= render "dashboard/protocol_list", protocols: @portfolio[:protocol_breakdown] %>
     </div>
 
-    <!-- Breakdown Cards -->
-    <div class="portfolio-breakdown">
-      <%= render "dashboard/breakdown_cards", portfolio: @portfolio %>
+    <!-- Right Column: Top Assets -->
+    <div class="sidebar-section">
+      <h3>Top Assets</h3>
+      <%= render "dashboard/top_assets", assets: @portfolio[:top_assets] %>
     </div>
-
-    <!-- Main Content Area -->
-    <div class="dashboard-grid">
-      <!-- Left Column: Protocol Positions -->
-      <div class="protocols-section">
-        <h3>Protocols</h3>
-        <%= render "dashboard/protocol_list", protocols: @portfolio[:protocol_breakdown] %>
-      </div>
-
-      <!-- Right Column: Top Assets -->
-      <div class="sidebar-section">
-        <h3>Top Assets</h3>
-        <%= render "dashboard/top_assets", assets: @portfolio[:top_assets] %>
-      </div>
-    </div>
-  <% end %>
-</div>
+  </div>
+<% end %>

@@ -1,0 +1,35 @@
+<header class="page-header">
+  <!-- Top Row: Navigation -->
+  <div class="header-top-row">
+    <%= link_to "DeFi Tracker", dashboard_path, class: "page-logo" %>
+    <nav class="page-nav">
+      <%= link_to "Dashboard", dashboard_path, class: "nav-link #{current_page?(dashboard_path) ? 'active' : ''}" %>
+      <%= link_to "Accounts", accounts_path, class: "nav-link #{current_page?(accounts_path) ? 'active' : ''}" %>
+      <% if Current.session %>
+        <%= button_to "Logout", session_path, method: :delete, class: "btn btn-outline" %>
+      <% end %>
+    </nav>
+  </div>
+
+  <!-- Divider -->
+  <div class="header-divider"></div>
+
+  <!-- Secondary Row: Status/Actions (Dashboard only) -->
+  <% if current_page?(dashboard_path) && defined?(@portfolio) %>
+    <div class="header-secondary-row">
+      <div class="header-status-actions">
+        <% if @portfolio[:last_synced] %>
+          <span class="status-text">Updated <%= time_ago_in_words(@portfolio[:last_synced]) %> ago</span>
+        <% end %>
+        <% summary = @portfolio[:sync_status_summary] %>
+        <% if summary[:syncing] > 0 %>
+          <span class="status-text status-syncing">⟳ Syncing <%= summary[:syncing] %></span>
+        <% end %>
+        <% if summary[:error] > 0 %>
+          <span class="status-text status-error">⚠ <%= summary[:error] %> errors</span>
+        <% end %>
+        <%= button_to "Sync All", sync_all_dashboard_path, method: :post, class: "btn btn-secondary btn-sm" %>
+      </div>
+    </div>
+  <% end %>
+</header>
