@@ -1,297 +1,55 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Дашборд - DeFi Tracker</title>
-  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
-  <%= javascript_importmap_tags %>
-
-  <!-- Distinctive Cyrillic-optimized fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Onest:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      --color-bg-primary: #0A0A0A;
-      --color-bg-secondary: #1A1A1A;
-      --color-bg-elevated: #2A2A2A;
-      --color-accent-primary: #10B981;
-      --color-accent-secondary: #14F195;
-      --color-text-primary: #F5F5F5;
-      --color-text-secondary: #A3A3A3;
-      --color-text-tertiary: #737373;
-      --color-border: rgba(255, 255, 255, 0.08);
-      --color-border-hover: rgba(255, 255, 255, 0.15);
-      --font-display: 'Unbounded', sans-serif;
-      --font-body: 'Onest', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      --radius-md: 16px;
-      --radius-full: 9999px;
-      --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.6);
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: var(--font-body);
-      line-height: 1.6;
-      color: var(--color-text-primary);
-      background: var(--color-bg-primary);
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    /* Grain overlay */
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-      pointer-events: none;
-      opacity: 0.4;
-      z-index: 1;
-    }
-
-    .dashboard-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 40px 24px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .dashboard-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 48px;
-      flex-wrap: wrap;
-      gap: 24px;
-    }
-
-    .dashboard-logo {
-      font-family: var(--font-display);
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: var(--color-accent-secondary);
-      text-decoration: none;
-    }
-
-    .dashboard-nav {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-    }
-
-    .nav-link {
-      color: var(--color-text-secondary);
-      text-decoration: none;
-      font-weight: 600;
-      transition: color 0.3s ease;
-    }
-
-    .nav-link:hover {
-      color: var(--color-accent-primary);
-    }
-
-    .logout-btn {
-      padding: 10px 24px;
-      background: transparent;
-      border: 2px solid var(--color-border);
-      border-radius: var(--radius-full);
-      color: var(--color-text-primary);
-      text-decoration: none;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      cursor: pointer;
-      font-family: var(--font-body);
-      font-size: 0.95rem;
-    }
-
-    .logout-btn:hover {
-      border-color: var(--color-accent-primary);
-      background: rgba(16, 185, 129, 0.1);
-    }
-
-    .welcome-card {
-      background: var(--color-bg-secondary);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 48px;
-      text-align: center;
-      box-shadow: var(--shadow-lg);
-      margin-bottom: 32px;
-      animation: fadeInUp 0.6s ease-out;
-    }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .welcome-card h1 {
-      font-family: var(--font-display);
-      font-size: 2.5rem;
-      font-weight: 800;
-      margin-bottom: 16px;
-      letter-spacing: -0.02em;
-    }
-
-    .welcome-card .highlight {
-      color: var(--color-accent-secondary);
-    }
-
-    .welcome-card p {
-      font-size: 1.2rem;
-      color: var(--color-text-secondary);
-      margin-bottom: 32px;
-    }
-
-    .welcome-card .email {
-      color: var(--color-accent-primary);
-      font-weight: 600;
-    }
-
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
-      margin-top: 32px;
-    }
-
-    .feature-card {
-      background: var(--color-bg-secondary);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 32px;
-      transition: all 0.3s ease;
-      animation: fadeInUp 0.6s ease-out;
-    }
-
-    .feature-card:nth-child(2) {
-      animation-delay: 0.1s;
-    }
-
-    .feature-card:nth-child(3) {
-      animation-delay: 0.2s;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--color-border-hover);
-    }
-
-    .feature-icon {
-      font-size: 2.5rem;
-      margin-bottom: 16px;
-      display: block;
-    }
-
-    .feature-card h3 {
-      font-family: var(--font-display);
-      font-size: 1.3rem;
-      font-weight: 700;
-      margin-bottom: 12px;
-    }
-
-    .feature-card p {
-      color: var(--color-text-secondary);
-      line-height: 1.7;
-    }
-
-    .coming-soon {
-      display: inline-block;
-      background: rgba(16, 185, 129, 0.1);
-      color: var(--color-accent-primary);
-      padding: 4px 12px;
-      border-radius: var(--radius-full);
-      font-size: 0.875rem;
-      font-weight: 700;
-      margin-top: 12px;
-    }
-
-    @media (max-width: 640px) {
-      .dashboard-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .welcome-card {
-        padding: 32px 24px;
-      }
-
-      .welcome-card h1 {
-        font-size: 2rem;
-      }
-
-      .feature-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="dashboard-container">
-    <header class="dashboard-header">
-      <%= link_to "DeFi Tracker", dashboard_path, class: "dashboard-logo" %>
-      <nav class="dashboard-nav">
-        <% if Current.session %>
-          <%= link_to "Accounts", accounts_path, class: "nav-link" %>
-          <%= button_to "Выйти", session_path, method: :delete, class: "logout-btn" %>
+<div class="dashboard-container">
+  <!-- Header Section -->
+  <div class="dashboard-header">
+    <h1>Overview</h1>
+    <div class="header-actions">
+      <% if @portfolio[:last_synced] %>
+        <span class="last-updated">Updated <%= time_ago_in_words(@portfolio[:last_synced]) %> ago</span>
+      <% end %>
+      <div class="sync-status">
+        <% summary = @portfolio[:sync_status_summary] %>
+        <% if summary[:syncing] > 0 %>
+          <span class="status-syncing">⟳ Syncing <%= summary[:syncing] %></span>
         <% end %>
-      </nav>
-    </header>
-
-    <% if flash[:notice] %>
-      <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 16px; margin-bottom: 24px; color: #10B981; text-align: center;">
-        <%= flash[:notice] %>
+        <% if summary[:error] > 0 %>
+          <span class="status-error">⚠ <%= summary[:error] %> errors</span>
+        <% end %>
       </div>
-    <% end %>
-
-    <div class="welcome-card">
-      <h1>Добро пожаловать в <span class="highlight">DeFi Tracker</span>!</h1>
-      <p>
-        Вы вошли как <span class="email"><%= Current.session.user.email_address %></span>
-      </p>
-      <p>Ваш дашборд пока в разработке. Скоро здесь появятся все функции для отслеживания портфеля.</p>
-    </div>
-
-    <div class="feature-grid">
-      <div class="feature-card">
-        <span class="feature-icon">🔗</span>
-        <h3>Подключение кошельков</h3>
-        <p>Добавьте ваши криптокошельки и биржевые аккаунты для автоматического отслеживания балансов.</p>
-        <span class="coming-soon">Скоро</span>
-      </div>
-
-      <div class="feature-card">
-        <span class="feature-icon">📊</span>
-        <h3>Аналитика портфеля</h3>
-        <p>Просматривайте детальную статистику по вашим активам, P&L и производительности.</p>
-        <span class="coming-soon">Скоро</span>
-      </div>
-
-      <div class="feature-card">
-        <span class="feature-icon">🔔</span>
-        <h3>Уведомления</h3>
-        <p>Настройте алерты для важных изменений в вашем портфеле и ценовых движений.</p>
-        <span class="coming-soon">Скоро</span>
-      </div>
+      <%= button_to "Sync All", sync_all_dashboard_path, method: :post, class: "btn btn-primary" %>
     </div>
   </div>
-</body>
-</html>
+
+  <!-- Empty State (if no accounts) -->
+  <% if @portfolio[:total_value] == 0 && Current.user.accounts.active.none? %>
+    <div class="empty-state">
+      <h2>No accounts connected</h2>
+      <p>Add your first wallet or exchange to start tracking your portfolio.</p>
+      <%= link_to "Add Account", new_account_path, class: "btn btn-primary" %>
+    </div>
+  <% else %>
+    <!-- Total Portfolio Value -->
+    <div class="portfolio-total">
+      <h2>$<%= number_with_delimiter(@portfolio[:total_value].round(0), delimiter: ",") %></h2>
+    </div>
+
+    <!-- Breakdown Cards -->
+    <div class="portfolio-breakdown">
+      <%= render "dashboard/breakdown_cards", portfolio: @portfolio %>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="dashboard-grid">
+      <!-- Left Column: Protocol Positions -->
+      <div class="protocols-section">
+        <h3>Protocols</h3>
+        <%= render "dashboard/protocol_list", protocols: @portfolio[:protocol_breakdown] %>
+      </div>
+
+      <!-- Right Column: Top Assets -->
+      <div class="sidebar-section">
+        <h3>Top Assets</h3>
+        <%= render "dashboard/top_assets", assets: @portfolio[:top_assets] %>
+      </div>
+    </div>
+  <% end %>
+</div>

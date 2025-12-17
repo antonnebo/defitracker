@@ -1,0 +1,28 @@
+<% if assets.empty? %>
+  <p class="empty-message">No assets found.</p>
+<% else %>
+  <div class="top-assets-list">
+    <% assets.each do |asset| %>
+      <div class="asset-row">
+        <div class="asset-info">
+          <% if asset[:icon_url].present? %>
+            <%= image_tag asset[:icon_url], class: "token-icon", alt: asset[:symbol], onerror: "this.style.display='none'" %>
+          <% else %>
+            <div class="token-icon-fallback"><%= asset[:symbol].first.upcase %></div>
+          <% end %>
+          <div>
+            <div class="token-symbol"><%= asset[:symbol] %></div>
+            <div class="token-name"><%= asset[:name] %></div>
+          </div>
+        </div>
+
+        <div class="asset-values">
+          <div class="value">$<%= number_with_delimiter(asset[:total_value].round(2), delimiter: ",") %></div>
+          <% if asset[:percentage] %>
+            <div class="percentage"><%= asset[:percentage] %>%</div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

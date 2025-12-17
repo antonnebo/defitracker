@@ -1,0 +1,26 @@
+<div class="breakdown-grid">
+  <!-- Idle Card -->
+  <div class="breakdown-card">
+    <h4>Idle</h4>
+    <div class="breakdown-value">
+      $<%= number_with_delimiter(portfolio[:idle_value].round(0), delimiter: ",") %>
+    </div>
+    <p class="breakdown-label">Wallet holdings</p>
+  </div>
+
+  <!-- Deployed Card -->
+  <div class="breakdown-card">
+    <h4>Deployed</h4>
+    <div class="breakdown-value">
+      $<%= number_with_delimiter(portfolio[:deployed_value].round(0), delimiter: ",") %>
+    </div>
+    <p class="breakdown-label">Protocol positions</p>
+  </div>
+
+  <!-- Futures Card (Placeholder) -->
+  <div class="breakdown-card">
+    <h4>Futures</h4>
+    <div class="breakdown-value">$0</div>
+    <p class="breakdown-label">Not supported yet</p>
+  </div>
+</div>

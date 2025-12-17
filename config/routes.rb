@@ -7,7 +7,8 @@ Rails.application.routes.draw do
       post :sync
     end
   end
-  get "dashboard", to: "dashboard#index"
+  get "dashboard", to: "dashboard#index", as: :dashboard
+  post "dashboard/sync_all", to: "dashboard#sync_all", as: :sync_all_dashboard
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

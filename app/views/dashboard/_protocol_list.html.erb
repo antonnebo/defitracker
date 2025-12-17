@@ -1,0 +1,48 @@
+<% if protocols.empty? %>
+  <p class="empty-message">No DeFi protocol positions found.</p>
+<% else %>
+  <div class="protocol-list">
+    <% protocols.each do |protocol| %>
+      <div class="protocol-row">
+        <div class="protocol-info">
+          <% if protocol[:icon_url].present? %>
+            <%= image_tag protocol[:icon_url], class: "protocol-icon", alt: protocol[:name], onerror: "this.style.display='none'" %>
+          <% else %>
+            <div class="protocol-icon-fallback"><%= protocol[:name].first.upcase %></div>
+          <% end %>
+          <div>
+            <div class="protocol-name"><%= protocol[:name] %></div>
+            <div class="protocol-meta">
+              <span class="chain-badge"><%= protocol[:chain] %></span>
+              <% if protocol[:type] %>
+                <span class="type-badge"><%= protocol[:type] %></span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <div class="protocol-values">
+          <div class="net-value">
+            <span class="label">Net:</span>
+            <span class="value <%= protocol[:net_value] < 0 ? 'negative' : 'positive' %>">
+              <%= protocol[:net_value] < 0 ? '-' : '' %>$<%= number_with_delimiter(protocol[:net_value].abs.round(2), delimiter: ",") %>
+            </span>
+          </div>
+          <div class="supplied-borrowed">
+            <span class="supplied">↑ $<%= number_with_delimiter(protocol[:supplied_value].round(2), delimiter: ",") %></span>
+            <% if protocol[:borrowed_value] > 0 %>
+              <span class="borrowed">↓ $<%= number_with_delimiter(protocol[:borrowed_value].round(2), delimiter: ",") %></span>
+            <% end %>
+          </div>
+          <% if protocol[:health_rate] %>
+            <div class="health-rate">
+              Health: <span class="<%= protocol[:health_rate] >= 1.5 ? 'safe' : 'warning' %>">
+                <%= protocol[:health_rate].round(2) %>
+              </span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
